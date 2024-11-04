@@ -20,6 +20,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
+    "smm-panel-dev.vercel.app"
 ]
 
 app.add_middleware(
