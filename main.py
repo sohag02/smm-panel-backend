@@ -1,6 +1,5 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from models import FacebookConfig, YoutubeConfig
-from service_models import Services
 from services import load_services
 from utils import run_script_async, load_scripts, update_config_file
 from configparser import ConfigParser
@@ -37,20 +36,6 @@ class Task(BaseModel):
     service_name: str
     service_id: int
     required_config: FacebookConfig | YoutubeConfig
-
-
-
-busy = False
-
-Queue = queue.Queue()
-
-def process_queue():
-    while True:
-        if not Queue.not_empty:
-            continue
-        task:Task = Queue.get()
-        if task["required_config"] is FacebookConfig:
-            run_script_async(f'{Services.Facebook().path}/main.py')
 
 
 @app.get("/")
