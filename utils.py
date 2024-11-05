@@ -41,7 +41,7 @@ def update_config_file(script_name: str, data: dict):
 
     for section, options in converted_data.items():
         if not config.has_section(section):
-            config.add_section(section)
+            config.add_section(section) 
         for key, value in options.items():
             config.set(section, key, value)
 

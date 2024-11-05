@@ -69,7 +69,7 @@ def service(service_name:str, task : Task):
 SCRIPTS_DIR = os.path.join(os.path.dirname(__file__), "services")
 
 @app.get("/config/{script_name}")
-def get_script_config(script_name: str):
+async def get_script_config(script_name: str):
     script_path = os.path.join(SCRIPTS_DIR, script_name)
     config_file = os.path.join(script_path, "config.ini")
 
@@ -86,7 +86,7 @@ def get_script_config(script_name: str):
     return config_dict
 
 @app.post('/run/{script}')
-def run_script(script: str, data: dict):
+async def run_script(script: str, data: dict):
     print(data)
     order_id = str(data.get("order_id"))
     # Enqueue the task
@@ -135,5 +135,5 @@ def edit_script(script:str, data: dict):
     }
 
 @app.get("/scripts/")
-def scripts():
+async def scripts():
     return {'scripts': load_scripts()}
