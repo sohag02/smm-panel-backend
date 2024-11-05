@@ -1,26 +1,27 @@
-from fastapi import FastAPI, BackgroundTasks, HTTPException
-from models import FacebookConfig, YoutubeConfig
-from services import load_services
-from utils import run_script_async, load_scripts, update_config_file
-from configparser import ConfigParser
-from db import add_service, get_services, update_order_status
-import queue
-from typing import TypedDict
-from pydantic import BaseModel
-from models import OrderStatus
 import os
+from configparser import ConfigParser
 
-from task import handle_task
-from queue_config import task_queue
-from rq.job import Job
-from rq.registry import StartedJobRegistry, FinishedJobRegistry, FailedJobRegistry
-
+import dotenv
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from rq.job import Job
+
+from db import add_service, get_services, update_order_status
+from models import FacebookConfig, OrderStatus, YoutubeConfig
+from queue_config import task_queue
+from services import load_services
+from utils import load_scripts, run_script_async, update_config_file
+
+
+dotenv.load_dotenv()
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+
 app = FastAPI()
 
 origins = [
     "http://localhost:3000",
-    "smm-panel-dev.vercel.app"
+    FRONTEND_URL,
 ]
 
 app.add_middleware(
