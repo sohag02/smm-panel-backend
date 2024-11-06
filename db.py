@@ -1,3 +1,4 @@
+import asyncio
 import os
 import dotenv
 from models import Service
@@ -23,6 +24,34 @@ async def update_order_status(order_id: int, status: str):  # Change type to str
         .execute()
     )
     return res
+
+def refund_order(order_id: int):
+    res = (
+        supabase.table("orders")
+        .select("*")
+        .eq("id", order_id)
+        .execute()
+    )
+    user_id = res.data[0]["user_id"]
+    cost = res.data[0]["cost"]
+    balance = (
+        supabase.table("balances")
+        .select("*")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    current_balance = balance.data[0]["balance"]
+    print(current_balance)
+    new_balance = current_balance + cost
+    print(new_balance)
+    up = (
+        supabase.table("balances")
+        .update({"balance": new_balance})
+        .eq("user_id", user_id)
+        .execute()
+    )
+    return up
+    
 
 async def rename_service_in_db(old_name: str, new_name: str):
     res = await (
@@ -61,3 +90,7 @@ async def update_service(id: int, service: Optional[Service]):
         .execute()
     )
     return res
+
+if __name__ == "__main__":
+    r = refund_order(11)
+    print(r)
