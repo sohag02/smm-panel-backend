@@ -2,17 +2,18 @@ import os
 from configparser import ConfigParser
 
 import dotenv
+import dramatiq
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from rq.job import Job
 
 from db import add_service, get_services, update_order_status
 from models import FacebookConfig, OrderStatus, YoutubeConfig
-from queue_config import task_queue
 from services import load_services
-from utils import load_scripts, run_script_async, update_config_file
+from utils import load_scripts, update_config_file
+import os
 
+from task import handle_task
 
 dotenv.load_dotenv()
 FRONTEND_URL = os.getenv("FRONTEND_URL")
@@ -89,42 +90,24 @@ async def get_script_config(script_name: str):
 @app.post('/run/{script}')
 async def run_script(script: str, data: dict):
     print(data)
-    order_id = str(data.get("order_id"))
-    # Enqueue the task
-    job = task_queue.enqueue(
-        'task.handle_task',
-        args=[script, data],
-        job_id=order_id
-    )
+    # order_id = str(data.get("order_id"))
+    msg = handle_task.send(script, data)
+    print(msg)
     return {
         'message': 'run successful',
         'script': script,
-        'task_id': job.id
     }
 
-@app.get("/status/{task_id}")
-async def get_status(task_id: str):
+@app.get("/get-result/{task_id}")
+async def get_result(task_id: str):
     try:
-        job = Job.fetch(task_id, connection=task_queue.connection)
-        status = job.get_status()
-        
-        if status == 'finished':
-            return {"status": status, "result": job.result, "position": 0}
-        elif status == 'failed':
-            return {"status": status, "error": str(job.exc_info), "position": 0}
-        else:
-            position = get_queue_position(task_id)
-            return {"status": status, "position": position}
+        # Retrieve the task using the custom message ID
+        message = dramatiq.Message.load(task_id)  # Load the message by task_id
+        result = message.get_result()  # Fetch the result stored in the backend
+        return {"task_id": task_id, "result": result}
     except Exception as e:
-        return {"status": "not_found", "error": str(e)}
+        return {"error": f"Failed to retrieve result: {str(e)}"}
 
-def get_queue_position(task_id: str):
-    # Get all jobs in the queue
-    queue_jobs = task_queue.get_jobs()
-    for index, job in enumerate(queue_jobs):
-        if job.id == task_id:
-            return index + 1
-    return 0  # Job might be running or completed
 
 @app.post('/edit/{script}')
 def edit_script(script:str, data: dict):
