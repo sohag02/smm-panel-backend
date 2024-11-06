@@ -15,14 +15,14 @@ def run_script(script_path):
         raise Exception(f"Error running script: {stderr.decode().strip()}")
     return stdout.decode().strip()
 
-def handle_task(script: str, data: dict):
+async def handle_task(script: str, data: dict):
     try:
         print("Processing task")
         logger.info(f"Processing task for script: {script}")
         order_id = data.get("order_id")
         data.pop("order_id", None)
         update_config_file(script, data)
-        # update_order_status(order_id, OrderStatus.PROCESSING.value)
+        await update_order_status(order_id, OrderStatus.PROCESSING.value)
         process = run_script(f'services/{script}/main.py')
     except Exception as e:
         print(e)
