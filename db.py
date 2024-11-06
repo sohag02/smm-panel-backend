@@ -13,11 +13,11 @@ key: str = os.environ.get("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 
-async def update_order_status(order_id: int, status: str):  # Change type to str
+def update_order_status(order_id: int, status: str):  # Change type to str
     if status not in [status.value for status in OrderStatus]:  # Validate against OrderStatus
         raise ValueError(f"Invalid status: {status}. Must be one of {[status.value for status in OrderStatus]}.")
     
-    res = await (
+    res = (
         supabase.table("orders")
         .update({"status": status})
         .eq("id", order_id)
@@ -53,8 +53,8 @@ def refund_order(order_id: int):
     return up
     
 
-async def rename_service_in_db(old_name: str, new_name: str):
-    res = await (
+def rename_service_in_db(old_name: str, new_name: str):
+    res = (
         supabase.table("services")
         .update({"name": new_name})
         .eq("name", old_name)
@@ -62,8 +62,8 @@ async def rename_service_in_db(old_name: str, new_name: str):
     )
     return res
 
-async def add_service(name: str, description:str=None, price: int=None):
-    res = await (
+def add_service(name: str, description:str=None, price: int=None):
+    res = (
         supabase.table("services")
         .insert({
             "name": name,
@@ -74,16 +74,16 @@ async def add_service(name: str, description:str=None, price: int=None):
     )
     return res
 
-async def get_services() -> list[Service]:
-    res = await (
+def get_services() -> list[Service]:
+    res = (
         supabase.table("services")
         .select("*")
         .execute()
     )
     return res.data
  
-async def update_service(id: int, service: Optional[Service]):
-    res = await (
+def update_service(id: int, service: Optional[Service]):
+    res = (
         supabase.table("services")
         .update(service)  # Use the service parameter directly
         .eq("id", id)
